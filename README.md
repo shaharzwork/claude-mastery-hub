@@ -1,82 +1,49 @@
 # AI Software Engineering Playbook
 
-A personal playbook for building software projects with AI.
+## What do you want to do now?
 
----
-
-## Recommended Workflow
-
-```
-New Project
-↓
-Architecture
-↓
-Development
-↓
-Testing
-```
-
-**Common routes:**
-
-| Situation | Go to |
-|---|---|
-| Development discovers a bug | Bug Fixing → Testing |
-| Bug Fixing reveals a design problem | Architecture |
-| Testing finds a defect | Bug Fixing |
-| Refactoring changes architecture | Architecture → Development → Testing |
-
----
-
-## What do you want to do?
-
-### 🚀 Start a New Project
-Define the problem, create CLAUDE.md, set up architecture, and ship a working scaffold before writing any logic.
+**1. Start a new project**
 → [prompts/start-project.md](prompts/start-project.md)
 
----
-
-### 🏗️ Architecture
-Analyze a feature, make product and technical decisions, review structure, and keep project knowledge current.
-→ [prompts/architecture.md](prompts/architecture.md)
-
----
-
-### 💻 Development
-Implement approved work in small safe steps. Inspect files before coding. Stay in scope. End with a testing handoff.
+**2. Add a new feature**
+→ [prompts/architecture.md](prompts/architecture.md) first
 → [prompts/development.md](prompts/development.md)
-
----
-
-### 🧪 Testing
-Review a handoff, generate test cases, identify edge cases and regression risks, and produce a clear pass/fail result.
 → [prompts/testing.md](prompts/testing.md)
 
----
-
-### 🐞 Fix a Bug
-Diagnose root cause before writing any fix. Assess risk, approve approach, implement narrow change, verify with tests.
+**3. Fix a bug**
 → [prompts/bug-fixing.md](prompts/bug-fixing.md)
+→ [prompts/testing.md](prompts/testing.md)
 
----
-
-### ♻️ Refactoring
-Improve structure without changing behavior. Small incremental steps, regression tests after each, with rollback checkpoints.
+**4. Refactor code**
 → [prompts/refactoring.md](prompts/refactoring.md)
+→ [prompts/testing.md](prompts/testing.md)
 
----
-
-### 📂 Session Management
-Decide when to start a new session or continue an existing one. Name sessions, track states, avoid sprawl.
+**5. Organize Claude sessions**
 → [prompts/session-management.md](prompts/session-management.md)
 
----
-
-### 📝 CLAUDE.md Template
-Generic project context template. Copy into any new project and fill in the blanks before the first session.
+**6. Create CLAUDE.md for a project**
 → [templates/CLAUDE.md](templates/CLAUDE.md)
 
+**7. Record lessons learned**
+→ [lessons/index.md](lessons/index.md)
+
 ---
 
-### 💡 Lessons Learned
-A running log of what worked, what didn't, and what changes next time.
-→ [lessons/index.md](lessons/index.md)
+## Where things are saved
+
+| Artifact | Location |
+|---|---|
+| Architecture notes, feature decisions, refactoring scope | `project-notes/architecture-notes.md` |
+| Lessons learned | `lessons/index.md` |
+| Project context for Claude | `CLAUDE.md` (in each project root) |
+
+---
+
+## How to use this playbook
+
+1. Choose what you want to do above.
+2. Open the linked workflow.
+3. Follow Step 1.
+4. Copy the prompt into Claude Code.
+5. Read Claude's answer.
+6. Continue to the next step in the workflow.

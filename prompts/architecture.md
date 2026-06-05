@@ -1,168 +1,223 @@
 # Architecture
 
-## 1. Purpose
-
-A workflow for making and recording architecture decisions with Claude. Covers feature analysis, product and technical decisions, architecture review, and keeping project knowledge current. Produces decisions you can defend and context Claude can use in future sessions.
+A guided workflow for analyzing and approving a new feature before development begins.
 
 ---
 
-## 2. When to Use
+## Before You Start
 
-- Before building any non-trivial feature
-- When choosing between two technical approaches
-- When something feels wrong about the current structure
-- When adding a major dependency or changing a core pattern
-- When re-onboarding Claude to an existing project after a gap
-- When the project has grown and the original architecture no longer fits
+Write a one-paragraph feature brief before opening Claude: what the feature does, who uses it, and what done looks like. No technical decisions yet — just the idea.
 
-**Do not use** for small tasks where the right approach is obvious. If you already know what to build and how, go to `development.md`.
+If you cannot describe the feature in one paragraph, it is not ready to analyze.
 
 ---
 
-## 3. Step-by-Step Workflow
+## Step 1 — Analyze the Feature
 
-**Step 1 — Name the trigger**
-Write one sentence: what decision needs to be made, or what is unclear. If you cannot name the trigger, the session will drift.
+**Goal:**
+Understand the full scope of the feature before making any decisions. Map what it touches, what it risks, and what might be underestimated.
 
-**Step 2 — Feature analysis**
-Before any decisions, fully understand what the feature does, what it touches, and what it risks. Ask Claude to map it — not build it.
+**What to do in Claude Code:**
+Open a new session. Name it: `[project-name] — Architecture — [feature name]`
+Paste CLAUDE.md at the top of the session.
 
-**Step 3 — Product decision first**
-Define what the feature should do and for whom before deciding how to build it. Technical decisions made before product decisions get rebuilt.
-
-**Step 4 — Technical decision**
-Present the constraints and ask for options. Evaluate trade-offs. Make a choice. One option wins — document why the others lost.
-
-**Step 5 — Architecture review**
-Check whether the existing structure still fits the decision made. If not, decide explicitly: adapt now or note it as debt.
-
-**Step 6 — Update project knowledge**
-Update CLAUDE.md, the architecture note, or both. New sessions start cold — decisions not written down are decisions lost.
-
----
-
-## 4. Required Sessions
-
-| Session | Purpose | When |
-|---|---|---|
-| Feature analysis | Map scope, dependencies, risks before any decision | Before building anything significant |
-| Product decision | Define behavior, edge cases, and constraints | After feature analysis, before technical work |
-| Technical decision | Evaluate options, choose approach, document rationale | After product decision is locked |
-| Architecture review | Assess structural fit, identify debt | After major decisions or periodically |
-
-Each session has a single output. Name it before you start.
-
----
-
-## 5. Required Documents
-
-| Document | Description | When Updated |
-|---|---|---|
-| CLAUDE.md | Project context: stack, structure, conventions, rules | After any structural change |
-| Architecture note | Decisions made, options rejected, reasons | After every architecture session |
-| Feature brief | What the feature does, who it serves, edge cases | Before technical decisions |
-
-Architecture notes can live in a `/docs` folder or inline in CLAUDE.md for small projects. The format does not matter — consistency does.
-
----
-
-## 6. Copy/Paste Prompts
-
-**Feature analysis:**
+**Exact prompt to paste:**
 ```
-I need to build [feature name]. Before we discuss how to build it, help me understand the full scope.
+Here is the project context:
 
-Map out:
+[paste CLAUDE.md]
+
+I want to add the following feature:
+
+[paste your feature brief]
+
+Before we discuss how to build it, map the full scope:
 - What this feature does end to end
-- What existing parts of the system it touches
-- What could go wrong or break
+- Which existing parts of the system it touches
+- What could break or regress
 - What I might be underestimating
 
 Do not propose a solution yet.
 ```
 
-**Product decision:**
+**What answer to expect:**
+A structured map of the feature's scope, affected components, and risks. No technical proposal yet. If Claude jumps to a solution, redirect it — analysis before design.
+
+**What to do next:**
+Review the map. If the scope is larger or riskier than expected, revise the feature brief now. Then go to Step 2.
+
+---
+
+## Step 2 — Make the Product Decision
+
+**Goal:**
+Lock the behavior of the feature before choosing how to build it. Technical decisions made before product decisions get rebuilt.
+
+**What to do in Claude Code:**
+Continue the Architecture session from Step 1.
+
+**Exact prompt to paste:**
 ```
-Here is what I know about [feature name]:
+Based on the scope analysis, help me nail down the product decision before we go technical.
 
-[paste feature brief or summary]
-
-Help me nail down the product decision before we go technical:
-- What exactly should this do? (behavior, not implementation)
+Answer these:
+- What exactly does this feature do? (behavior, not implementation)
 - What are the edge cases I need to decide on?
-- What is out of scope?
+- What is explicitly out of scope?
 
-Ask me questions if anything is ambiguous. I want product clarity before we touch the technical approach.
+Ask me questions if anything is ambiguous. I want a locked product decision before we touch the technical approach.
 ```
 
-**Technical decision:**
+**What answer to expect:**
+A short list of behavioral definitions and edge cases with open questions for you to answer. Claude should ask — not assume — when something is unclear. Answer all questions before moving on.
+
+**What to do next:**
+Confirm the product decision in one or two sentences. Write it down — this becomes the behavioral contract for the feature. Then go to Step 3.
+
+---
+
+## Step 3 — Evaluate Technical Options
+
+**Goal:**
+Understand the trade-offs of different implementation approaches before committing to one.
+
+**What to do in Claude Code:**
+Continue the Architecture session.
+
+**Exact prompt to paste:**
 ```
 Product decision is locked:
-[paste product decision summary]
 
-Constraints:
-[list hard constraints: stack, performance, timeline, existing patterns]
+[paste your product decision summary]
 
-Propose 2–3 technical approaches to implement this.
+My constraints:
+[list hard constraints: existing stack, performance needs, time, patterns to follow]
 
-For each:
+Propose 2–3 technical approaches to implement this feature.
+
+For each approach:
 - How it works
-- Trade-offs
-- What it breaks or complicates in the existing system
+- Key trade-offs
+- What it makes harder in the existing system
+- What it breaks or complicates
 
 Do not recommend one yet.
 ```
 
-**Architecture review:**
+**What answer to expect:**
+Two or three distinct approaches with honest trade-offs. Each should feel meaningfully different. If they look similar, ask Claude to push them further apart — closer to the extremes of the trade-off spectrum.
+
+**What to do next:**
+Review each option. Ask Claude: "What does each option make harder?" Then go to Step 4.
+
+---
+
+## Step 4 — Approve or Cancel
+
+**Goal:**
+Make an explicit decision: build the feature as proposed, build it differently, or cancel it.
+
+**What to do in Claude Code:**
+Continue the Architecture session.
+
+**Exact prompt to paste:**
 ```
-Here is the current structure of the project:
+Based on the options, I want to:
 
-[paste CLAUDE.md or relevant architecture summary]
+[ ] Proceed with option [N] — [name it]
+[ ] Proceed with a modified approach: [describe modification]
+[ ] Cancel this feature for now — reason: [state reason]
 
-We just decided to [summarize decision].
-
-Review the current architecture against this decision:
-- Does the existing structure support it cleanly?
-- What needs to change?
-- What becomes technical debt if we don't change it now?
-
-Be specific. Flag anything that will cause friction later.
+If proceeding: confirm the chosen approach and summarize in 2–3 sentences what will be built and how.
+If cancelling: summarize what was learned from the analysis that led to this decision.
 ```
 
-**Update project knowledge:**
-```
-Based on this session, update my project knowledge.
+**What answer to expect:**
+If proceeding: a clear confirmation of the chosen approach with a brief rationale.
+If cancelling: a short summary of the analysis findings. This is not a failure — a cancelled feature with documented reasoning is a good outcome.
 
-Produce:
-1. A revised CLAUDE.md reflecting any structural or convention changes
-2. An architecture note entry: decision made, options considered, reason for choice
+**What to do next:**
+If cancelled: record the decision in the architecture note and close the session. No further steps needed.
+If approved: go to Step 5.
+
+---
+
+## Step 5 — Assess Architecture Impact
+
+**Goal:**
+Check whether the existing project structure supports the chosen approach, and identify what needs to change before development starts.
+
+**What to do in Claude Code:**
+Continue the Architecture session.
+
+**Exact prompt to paste:**
+```
+The chosen approach is: [paste approved approach summary]
+
+Review the current project structure against this decision:
+
+[paste the relevant section of CLAUDE.md — folder structure, stack, conventions]
+
+Tell me:
+- Does the current structure support this cleanly?
+- What needs to change before development starts?
+- What becomes technical debt if we do not change it now?
+
+Be specific. Flag anything that will create friction during development.
+```
+
+**What answer to expect:**
+A short list of structural changes needed before development, and a separate list of optional improvements that can be deferred. If nothing needs to change, Claude should say so clearly.
+
+**What to do next:**
+Decide which changes to make now vs. defer. Then go to Step 6.
+
+---
+
+## Step 6 — Update Project Knowledge
+
+**Goal:**
+Record the decision and update CLAUDE.md so the next session starts with the correct context.
+
+**What to do in Claude Code:**
+Continue the Architecture session.
+
+**Exact prompt to paste:**
+```
+The architecture decision is final. Produce two outputs:
+
+1. An architecture note entry:
+   - Feature name
+   - Decision made
+   - Options considered and why they were rejected
+   - Behavioral contract (product decision summary)
+
+2. An updated CLAUDE.md reflecting any structural or convention changes from this session.
 
 Keep both concise. No padding.
 ```
 
----
+**What answer to expect:**
+A clean architecture note entry (5–10 lines) and a revised CLAUDE.md. If CLAUDE.md has not changed, Claude should confirm that explicitly — do not assume.
 
-## 7. Common Mistakes
-
-- **Making technical decisions before product decisions.** The implementation gets built, then the product requirement changes, and the implementation is wrong. Lock the "what" before the "how."
-
-- **Asking Claude to recommend without giving constraints.** Claude will pick the most common pattern, not the right one for your situation. Always state hard constraints before asking for options.
-
-- **Treating Claude's first architecture proposal as final.** It is a starting point. Push back, add constraints, ask what breaks. The second or third response is usually more useful than the first.
-
-- **Not recording the rejected options.** Three months later you will reconsider one of them. If you did not write down why you rejected it, you will have the same conversation again.
-
-- **Skipping the architecture review after a major decision.** Decisions compound. A technical decision that ignores the existing structure creates friction in every session that follows.
-
-- **Updating CLAUDE.md mid-session instead of at the end.** Mid-session updates are partial and get outdated before the session ends. Update once, after the decision is final.
+**What to do next:**
+Save the architecture note entry to `project-notes/architecture-notes.md`. Update CLAUDE.md in the project. Commit both. Then go to Step 7.
 
 ---
 
-## 8. Shahar Best Practices
+## Step 7 — Hand Off to Development
 
-- Product decision and technical decision are separate sessions. Never run them together. Mixing them leads to solutions in search of a problem.
-- Write the feature brief in plain language, not engineering language. If you cannot explain what it does without technical terms, the product decision is not ready.
-- Keep the architecture note as a running log, not a single doc. One entry per decision, dated. Easy to audit, easy to hand to Claude as context.
-- When reviewing options, ask Claude: "What does each option make harder?" Trade-offs are often more visible from the downside than the upside.
-- After any architecture session, do a one-line gut-check: "Would I be comfortable explaining this decision to someone in a year?" If not, the decision or the documentation needs more work.
-- Set a size limit on architecture sessions. If a session runs past 30 minutes of back-and-forth without a decision, the trigger was not specific enough. Stop, rewrite the trigger, restart.
+**Goal:**
+Confirm the architecture note is saved and route to the development workflow.
+
+**What to do in Claude Code:**
+No prompt needed for this step. Close the Architecture session.
+
+**Exact prompt to paste:**
+Not applicable. You are switching workflows.
+
+**What answer to expect:**
+Not applicable.
+
+**What to do next:**
+Confirm `project-notes/architecture-notes.md` has the entry from Step 6 and CLAUDE.md is up to date. Then open `prompts/development.md` and follow it from Step 1. The development workflow will open and prime the Development session.

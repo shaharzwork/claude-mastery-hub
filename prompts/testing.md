@@ -1,171 +1,253 @@
 # Testing
 
-## 1. Purpose
-
-A workflow for testing implemented work with Claude. Takes a handoff from development or bug-fixing and produces verified, working code with documented test cases, edge case coverage, regression risk assessment, and a clear pass/fail result. Testing is not optional — it is the gate between implementation and done.
+A guided workflow for verifying a feature or bug fix from handoff to approval decision.
 
 ---
 
-## 2. When to Use
+## Before You Start
 
-- After receiving a testing handoff from a development session
-- After receiving a testing handoff from a bug-fix session
-- Before merging or deploying any non-trivial change
-- When verifying that a fix did not introduce new problems
+You need a testing handoff from either `prompts/development.md` or `prompts/bug-fixing.md` before opening Claude.
 
-**Do not use** as a substitute for a missing handoff. If no handoff exists, go back to `development.md` or `bug-fixing.md` and produce one first. Testing without a handoff means guessing what was built.
+If no handoff exists, go back and produce one first. Testing without a handoff means guessing what was built — results will be incomplete and unreliable.
 
 ---
 
-## 3. Step-by-Step Workflow
+## Step 1 — Review the Handoff
 
-**Step 1 — Review the handoff**
-Read the full testing handoff before doing anything else. Confirm you understand: what was built or fixed, which files changed, and what the expected behavior is.
+**Goal:**
+Fully understand what was built or fixed before generating a single test case. Misreading the handoff produces tests that miss the point.
 
-**Step 2 — Generate test cases**
-Ask Claude to produce test cases from the handoff. Cover happy path, edge cases, and failure cases. Review the list before running anything — add or remove cases based on your knowledge of the system.
+**What to do in Claude Code:**
+Open a new session. Name it: `[project-name] — Testing — [feature or fix name]`
+Paste CLAUDE.md and the testing handoff at the top.
 
-**Step 3 — Identify edge cases**
-Go deeper than the obvious inputs. Ask Claude to think adversarially: what inputs or states would expose a hidden assumption in the implementation?
-
-**Step 4 — Assess regression risks**
-Identify what existing behavior could have been broken by the change. Check the files that were modified and their dependencies.
-
-**Step 5 — Execute tests**
-Run through the test cases. Document each result: pass, fail, or unexpected behavior. Do not skip a failing case — every failure is information.
-
-**Step 6 — Complete the validation checklist**
-Confirm the implementation matches the product decision, follows project conventions, handles errors correctly, and has no obvious performance or security issues.
-
-**Step 7 — Record the result**
-Pass or fail — write it down with evidence. If fail, summarize what broke and hand off to `bug-fixing.md`. If pass, mark the task complete and update CLAUDE.md if behavior changed.
-
----
-
-## 4. Required Sessions
-
-| Session | Purpose | When |
-|---|---|---|
-| Test planning | Review handoff, generate test cases, identify edge cases and regression risks | Before running any tests |
-| Test execution | Run through test cases, document results | After test planning |
-| Regression review | Verify existing behavior is intact | After test execution, before marking done |
-
-Do not combine test planning and execution in one session. Planning requires stepping back; execution requires focus on results.
-
----
-
-## 5. Required Documents
-
-| Document | Description | Source |
-|---|---|---|
-| Testing handoff | What was built/fixed, files changed, known edge cases | `development.md` or `bug-fixing.md` |
-| Test cases | Full list: happy path, edge cases, failure cases | Generated in test planning session |
-| Validation checklist | Per-task checklist confirming correctness, conventions, error handling | Completed during test execution |
-| Test results | Pass/fail per case, summary of outcome | Written during test execution |
-
----
-
-## 6. Copy/Paste Prompts
-
-**Review the handoff:**
+**Exact prompt to paste:**
 ```
-Here is the testing handoff for this task:
+Here is the project context:
+
+[paste CLAUDE.md]
+
+Here is the testing handoff:
 
 [paste handoff]
 
-Before we generate test cases, confirm you understand:
+Before we create test cases, confirm your understanding:
 - What was built or fixed
 - What the expected behavior is
 - Which files were changed
+- What was flagged as uncertain or risky during implementation
 
-Flag anything in the handoff that is ambiguous or missing.
+Flag anything in the handoff that is ambiguous or missing before we continue.
 ```
 
-**Generate test cases:**
-```
-Based on this handoff, generate a full set of test cases.
+**What answer to expect:**
+A clear summary of what was built, the expected behavior, and any gaps or ambiguities in the handoff. If Claude flags a gap, resolve it before generating test cases — do not test against an unclear specification.
 
-Include:
-- Happy path: expected inputs producing expected outputs
-- Edge cases: unusual but valid inputs
-- Failure cases: invalid inputs, missing data, API errors
+**What to do next:**
+Resolve all flagged ambiguities. Then go to Step 2.
+
+---
+
+## Step 2 — Generate Test Cases
+
+**Goal:**
+Produce a complete list of test cases covering all expected behavior before running anything.
+
+**What to do in Claude Code:**
+Continue the testing session.
+
+**Exact prompt to paste:**
+```
+Generate a full set of test cases for this change.
+
+Cover three categories:
+
+1. Happy path — expected inputs producing expected outputs
+2. Edge cases — unusual but valid inputs or states
+3. Failure cases — invalid inputs, missing data, API errors, timeouts
 
 For each test case:
+- ID (T01, T02, ...)
+- Category
 - Input or condition
-- Expected outcome
+- Expected output or behavior
 - How to verify it
 
 Do not run anything yet. I will review the list first.
 ```
 
-**Edge case analysis:**
+**What answer to expect:**
+A numbered test case list with all three categories represented. Review it before running anything — add cases that Claude cannot know about from context alone (e.g. known edge cases in your system, previous bug patterns).
+
+**What to do next:**
+Review and supplement the list. Then go to Step 3.
+
+---
+
+## Step 3 — Identify Edge Cases
+
+**Goal:**
+Go deeper than the obvious inputs. Surface hidden assumptions in the implementation that the standard test cases would not catch.
+
+**What to do in Claude Code:**
+Continue the testing session.
+
+**Exact prompt to paste:**
 ```
 Look at this implementation and think adversarially.
 
-[paste relevant code or describe the feature]
+[paste the relevant changed code or describe the feature in detail]
 
 What inputs, states, or sequences of events would expose a hidden assumption or cause unexpected behavior?
 
-Focus on things the happy path test cases would not catch.
+Focus specifically on things the happy path and standard edge cases would not catch:
+- Boundary values
+- Concurrent or sequential operations
+- Missing or null data in unexpected places
+- Behavior that depends on external state or timing
+
+Add any new cases to the test list with ID and category.
 ```
 
-**Regression risk assessment:**
+**What answer to expect:**
+A short list of additional adversarial test cases that go beyond the obvious. If Claude produces nothing new, ask it to focus specifically on boundary conditions and state-dependent behavior.
+
+**What to do next:**
+Add the new cases to the master test list. Then go to Step 4.
+
+---
+
+## Step 4 — Assess Regression Risks
+
+**Goal:**
+Identify what existing behavior could have been broken by this change, beyond what the feature tests cover.
+
+**What to do in Claude Code:**
+Continue the testing session.
+
+**Exact prompt to paste:**
 ```
 These files were changed in this implementation:
 
-[list changed files]
+[list changed files from the handoff]
 
-Review each file and identify:
-- What existing behavior depends on the changed code
-- What other parts of the system call or import these files
-- What could break that the test cases do not currently cover
+For each file:
+- What existing behavior depends on the changed code?
+- What other parts of the system call or import this file?
+- What could break that the current test cases do not cover?
 
-Be specific. I want to know what to check, not just that regression is possible.
+Add regression test cases to the list where needed. If you believe there are no regression risks, explain why — do not just state it.
 ```
 
-**Validation checklist:**
+**What answer to expect:**
+A specific list of regression risks with supporting reasoning, plus additional test cases for anything not already covered. "No regression risks" is rarely correct — push back if Claude states it without explanation.
+
+**What to do next:**
+Add regression cases to the master test list. Then go to Step 5.
+
+---
+
+## Step 5 — Run the Tests
+
+**Goal:**
+Execute every test case, document each result, and surface failures before reaching the approval decision.
+
+**What to do in Claude Code:**
+Run the tests yourself — Claude cannot execute your code. Use this prompt to prepare and document results.
+
+**Exact prompt to paste:**
 ```
-We have completed testing for [feature/fix name].
+Here is the complete test list:
 
-Run through this validation checklist and give me a clear yes/no for each item:
+[paste full test case list]
 
-1. Does the implementation match the product decision?
+I am going to run these tests now. Produce a results table I can fill in:
+
+| ID | Description | Expected | Actual | Status |
+|----|-------------|----------|--------|--------|
+
+Leave the Actual and Status columns blank. I will fill them in as I run each case.
+```
+
+**What answer to expect:**
+A clean results table with all test case IDs and descriptions pre-filled. Run every test case and record the actual result and status (Pass / Fail / Blocked) for each one.
+
+**What to do next:**
+If all cases pass: go to Step 6.
+If any case fails: note the failing IDs and continue to Step 6 anyway — complete the full run before making a decision.
+
+---
+
+## Step 6 — Complete the Validation Checklist
+
+**Goal:**
+Verify correctness, conventions, and quality beyond functional behavior.
+
+**What to do in Claude Code:**
+Continue the testing session. Paste the completed results table.
+
+**Exact prompt to paste:**
+```
+Testing is complete. Here are the results:
+
+[paste completed results table]
+
+Now run through the validation checklist. Give a clear Yes / No for each item:
+
+1. Does the implementation match the behavioral contract in the architecture note?
 2. Does it follow the conventions in CLAUDE.md?
 3. Does it handle errors and bad input correctly?
 4. Are there any hardcoded values that should not be hardcoded?
 5. Are there any obvious performance concerns?
-6. Are there any security considerations that were not addressed?
-7. Is the code readable without requiring the author to explain it?
+6. Are there any security gaps — unvalidated input, missing auth, sensitive data exposed?
+7. Is the code readable without the author needing to explain it?
 
-For any "no" — describe specifically what is wrong.
+For every No: describe specifically what is wrong and how serious it is.
 ```
 
----
+**What answer to expect:**
+A Yes/No answer per item with specific descriptions for any No. Vague answers like "could be improved" are not acceptable — ask Claude to be specific about what is wrong and what the impact is.
 
-## 7. Common Mistakes
-
-- **Testing only the happy path.** The happy path is the least likely failure mode in production. Edge cases and failure cases are where bugs live.
-
-- **Skipping the handoff review.** Starting test case generation without fully understanding what was built leads to test cases that miss the point.
-
-- **Treating Claude-generated test cases as complete.** Claude generates what it can infer from the handoff. You know the system. Add cases Claude cannot know about.
-
-- **Not checking regression risks.** Every change has a blast radius. Skipping regression review means discovering the blast radius in production.
-
-- **Merging on "it seems to work."** Testing without documented results is not testing — it is optimism. Every session should end with a written pass/fail.
-
-- **Ignoring failing test cases.** A failing case that gets noted and skipped is a known bug being shipped. Treat every failure as a blocker until explicitly decided otherwise.
-
-- **Not updating CLAUDE.md when behavior changes.** If the test confirms new behavior that differs from what CLAUDE.md describes, the doc is now wrong. Fix it before the next session.
+**What to do next:**
+Tally the results: failed test cases + checklist Nos. Then go to Step 7.
 
 ---
 
-## 8. Shahar Best Practices
+## Step 7 — Approve or Return
 
-- Read the handoff twice before generating test cases. The second read always surfaces something the first one missed.
-- Write the test cases as a numbered list before running any of them. Reviewing the list as a whole reveals gaps that are invisible case by case.
-- Ask Claude for edge cases separately from the main test case generation. When edge cases are mixed in, they get less attention and less depth.
-- Treat the regression risk session as non-negotiable for any change that touches shared utilities, data models, or API interfaces.
-- A failing test is not a problem — it is the test working. The problem is shipping without running the test.
-- Keep test results as a short written record, even if informal: date, task, cases run, result. Builds a paper trail for future debugging and for training your own instincts.
-- If the validation checklist turns up more than one "no," do not patch them in the test session. Hand off to `bug-fixing.md` or `refactoring.md` cleanly.
+**Goal:**
+Make an explicit decision: the change is approved, or it returns to development with a clear list of issues.
+
+**What to do in Claude Code:**
+Continue the testing session.
+
+**Exact prompt to paste:**
+```
+Based on the test results and validation checklist, produce a final testing report.
+
+Include:
+- Overall decision: Approved or Returned
+- Summary of what was tested (2–3 sentences)
+- Passed cases: count
+- Failed cases: list with ID and description
+- Checklist failures: list with description
+- If Returned: a prioritized list of issues to fix, each with enough detail to act on
+
+Keep it concise. This report goes to the next session.
+```
+
+**What answer to expect:**
+A structured report with a clear Approved or Returned decision and specific, actionable findings.
+
+---
+
+**If Approved:**
+The feature or fix is done. Record any relevant lessons in `lessons/index.md`. Move to the next feature starting at `prompts/architecture.md`.
+
+**If Returned:**
+Copy the issue list from the report. Open the appropriate workflow:
+- Code issues → `prompts/bug-fixing.md`
+- Structural issues → `prompts/refactoring.md`
+- Scope or behavioral issues → `prompts/architecture.md`
+
+Attach the testing report to the next session so the issues are not reconstructed from scratch.

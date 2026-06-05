@@ -1,164 +1,229 @@
 # Development
 
-## 1. Purpose
-
-A workflow for implementing approved work with Claude. Architecture is decided, product decision is locked — this is execution. The discipline here is staying in the lane: build what was agreed, in small safe steps, without redesigning along the way. Output is working code and a clean handoff for testing.
+A guided workflow for implementing an approved feature from architecture plan to testing handoff.
 
 ---
 
-## 2. When to Use
+## Before You Start
 
-- Implementing a feature after architecture and product decisions are finalized
-- Building out a task from a defined spec or ticket
-- Continuing work from a previous session with a clear next step
+You need two things before opening Claude:
+1. An approved architecture note saved in `project-notes/architecture-notes.md`
+2. An up-to-date CLAUDE.md
 
-**Do not use** if the architecture is still open or the product decision is unclear. Go back to `architecture.md` first. Starting development on an unresolved design is the most expensive mistake in this playbook.
-
----
-
-## 3. Step-by-Step Workflow
-
-**Step 1 — Confirm the work is approved**
-Before opening Claude, verify: architecture note exists, product decision is written, CLAUDE.md is current. If any of these are missing, stop.
-
-**Step 2 — Inspect relevant files before writing any code**
-Read every file that will be touched. Ask Claude to summarize what each one does and how they connect. Do not write a single line until this is done.
-
-**Step 3 — Write a task brief**
-One short paragraph: what needs to change, in which files, and what done looks like. This is your scope boundary for the session.
-
-**Step 4 — Implement in small steps**
-One logical change at a time. After each step, verify the code compiles or runs before moving on. Never stack multiple unverified changes.
-
-**Step 5 — Stay in scope**
-If Claude suggests an improvement, refactor, or structural change outside the task brief — note it, do not act on it. Use `refactoring.md` later.
-
-**Step 6 — Review before finishing**
-Read every changed file before closing the session. Check for unintended side effects, hardcoded values, or logic that doesn't match the product decision.
-
-**Step 7 — Create testing handoff**
-Write a short note describing what was built, what to test, and any known edge cases. This goes to `testing.md` or directly into the test session.
+If either is missing, go back to `prompts/architecture.md` first. Starting development without an approved plan is the most expensive mistake in this playbook.
 
 ---
 
-## 4. Required Sessions
+## Step 1 — Open the Development Session
 
-| Session | Purpose | When |
-|---|---|---|
-| File inspection | Understand what exists before changing it | Start of every development session |
-| Implementation | Build the approved change in small steps | After inspection |
-| Review | Read all changed files, catch drift | Before closing the session |
+**Goal:**
+Start the session with the right context so Claude understands the project, the decision, and the scope before touching any code.
 
-Keep each development session focused on one task. Multiple tasks in one session produce tangled diffs and hard-to-trace bugs.
+**What to do in Claude Code:**
+Open a new session. Name it: `[project-name] — Development — [feature name]`
 
----
-
-## 5. Required Documents
-
-| Document | Description | When Used |
-|---|---|---|
-| Task brief | What to build, which files, what done looks like | Written before first keystroke |
-| CLAUDE.md | Project context — must be current before starting | Attached at session start |
-| Architecture note | The approved design this work implements | Referenced during implementation |
-| Testing handoff | What was built, what to test, edge cases | Written at session end |
-
----
-
-## 6. Copy/Paste Prompts
-
-**File inspection:**
+**Exact prompt to paste:**
 ```
-Before we write any code, I need to understand what already exists.
+Here is the project context:
 
-Here are the files we'll be working with:
-[list file paths]
+[paste CLAUDE.md]
+
+Architecture decision for this feature:
+
+[paste the relevant entry from project-notes/architecture-notes.md]
+
+We are implementing this feature. Before we write any code:
+- Confirm you understand the feature and its behavioral contract
+- List the files we will need to create or modify
+- Flag anything ambiguous before we start
+
+Do not write code yet.
+```
+
+**What answer to expect:**
+A file list, a confirmation of the feature scope and behavioral contract, and any clarifying questions. If Claude starts writing code immediately, stop it — confirmation always comes before implementation.
+
+**What to do next:**
+Answer any questions. Confirm the file list looks correct. Then go to Step 2.
+
+---
+
+## Step 2 — Inspect Existing Files
+
+**Goal:**
+Understand what already exists before changing anything. One incorrect assumption about existing code costs more time than reading every file.
+
+**What to do in Claude Code:**
+Continue the development session.
+
+**Exact prompt to paste:**
+```
+Before we write anything, inspect the files we will be working with:
+
+[list the files from Step 1]
 
 For each file:
-- Summarize what it does
-- Note any patterns, conventions, or constraints I should follow
-- Flag anything that could be affected by the change we're about to make
+- Summarize what it currently does
+- Note the patterns and conventions used
+- Flag anything that could be affected by our changes
 
 Do not suggest changes yet.
 ```
 
-**Open a development session:**
+**What answer to expect:**
+A per-file summary with patterns, conventions, and potential side effects flagged. If Claude flags an unexpected dependency or conflict, resolve it before writing any code. Do not work around it.
+
+**What to do next:**
+Review the summaries. Update the file list if the inspection revealed additional files that will be affected. Then go to Step 3.
+
+---
+
+## Step 3 — Write the Task Brief
+
+**Goal:**
+Define the exact scope of this session before a single line is written. The task brief is the boundary — anything outside it gets flagged, not built.
+
+**What to do in Claude Code:**
+Continue the development session.
+
+**Exact prompt to paste:**
 ```
-Here is the context for this session:
+Based on the architecture note and the file inspection, write a task brief for this session.
 
-[paste CLAUDE.md or relevant section]
+Include:
+- What needs to be built (one sentence)
+- Files to create or modify
+- Files explicitly out of scope
+- Definition of done: what does working look like?
 
-Architecture decision:
-[paste architecture note]
-
-Task brief:
-[paste task brief]
-
-We are implementing exactly this. If you see something that should be improved but is outside this scope, flag it as a note — do not act on it.
-
-Start by confirming you understand the task and the boundary.
+This brief is the constraint for everything we build in this session.
 ```
 
-**Small step implementation:**
+**What answer to expect:**
+A short, specific task brief — no more than 10 lines. If it is longer, the scope is too large for one session. Split it now, not mid-implementation.
+
+**What to do next:**
+Confirm or adjust the brief. Once confirmed, treat it as locked. Then go to Step 4.
+
+---
+
+## Step 4 — Implement Step by Step
+
+**Goal:**
+Build the feature in small, verifiable steps. One logical change at a time — never stack unverified changes.
+
+**What to do in Claude Code:**
+Continue the development session. Repeat this prompt for each step.
+
+**Exact prompt to paste:**
 ```
 Implement only this step:
-[describe one logical change]
 
-Files to change:
-[list specific files]
+[describe one logical change — one function, one file, one integration point]
 
-Do not change anything outside these files. Do not refactor while implementing. Show me the change and explain it before moving on.
+Constraints:
+- Change only what is described above
+- Do not refactor or improve anything outside this step
+- Do not fix bugs you notice — flag them as notes
+- Show me the change before we move on
+
+I will verify this step before we continue.
 ```
 
-**Scope check:**
-```
-Before we continue — are we still inside the task brief?
+**What answer to expect:**
+The code change for that one step, clearly presented. Nothing more. If Claude changes more than described or refactors surrounding code, call it out and ask it to revert to scope.
 
-Task brief: [paste brief]
-
-Review what has been changed so far and confirm:
-- Everything changed was in scope
-- Nothing was refactored or restructured unexpectedly
-- We are on track to finish the task as defined
-```
-
-**Testing handoff:**
-```
-We've finished implementing [feature/task name].
-
-Write a testing handoff with:
-- Summary of what was built (2–3 sentences)
-- Files changed and what changed in each
-- What to test: happy path, edge cases, failure cases
-- Anything I'm unsure about or that needs closer review
-
-Keep it short. This goes directly into the test session.
-```
+**What to do next:**
+Review the change. If it looks correct, confirm and move to the next step using the same prompt. Repeat until the task brief is complete. Then go to Step 5.
 
 ---
 
-## 7. Common Mistakes
+## Step 5 — Scope Check
 
-- **Skipping file inspection.** Writing code without reading what exists leads to duplicated logic, broken conventions, and bugs that take longer to find than the feature took to build.
+**Goal:**
+Verify the session stayed inside the task brief and nothing unexpected was changed.
 
-- **Letting Claude refactor while implementing.** Claude will improve things it notices along the way. Each unsolicited change is an unreviewed change. Scope creep in code is invisible until it breaks something.
+**What to do in Claude Code:**
+Continue the development session.
 
-- **Multiple tasks in one session.** The session loses focus, the diff becomes large, and tracing a bug means untangling two features at once.
+**Exact prompt to paste:**
+```
+Before we finish, run a scope check.
 
-- **Not writing the task brief before starting.** Without a written scope boundary, "done" is undefined and the session drifts until you run out of context or patience.
+Task brief: [paste the brief from Step 3]
 
-- **Stacking unverified changes.** Implementing step 2 before verifying step 1 means when something breaks, you don't know which step caused it.
+Review everything we changed in this session and confirm:
+- Every change was inside the task brief
+- Nothing was refactored or restructured outside scope
+- No new dependencies were added without discussion
+- The behavioral contract from the architecture note is satisfied
 
-- **Skipping the review step.** Claude occasionally introduces hardcoded values, changes a function signature silently, or adds an import that doesn't belong. A five-minute read catches all of this.
+List anything that was flagged as a note but not acted on.
+```
 
-- **Not writing the testing handoff.** Opening a test session cold without a handoff means reconstructing what was built from the code. Slow and error-prone.
+**What answer to expect:**
+A clean confirmation that the implementation matches the task brief, plus a list of flagged notes for future sessions. If anything drifted out of scope, decide now: revert it and note it for later, or explicitly approve the change before continuing.
+
+**What to do next:**
+Resolve any out-of-scope items. Then go to Step 6.
 
 ---
 
-## 8. Shahar Best Practices
+## Step 6 — Review All Changes
 
-- Write the task brief before opening Claude, not inside the session. Thinking and implementing are separate modes — mixing them degrades both.
-- One session per task. If a task feels too big for one session, split the task, not the session discipline.
-- When Claude flags something out of scope, paste it into a running notes doc titled "Refactor later." Keeps the session clean without losing the observation.
-- Commit after each completed step, not after the full task. Small commits mean small rollbacks. `git commit` is a save point, not a ceremony.
-- If you hit something unexpected mid-implementation — a file that doesn't match the architecture, a pattern that contradicts CLAUDE.md — stop. Do not work around it. Fix the context first.
-- Read the diff before every commit. Not Claude's summary of the diff — the actual diff. You are the last line of review.
+**Goal:**
+Read every changed file before closing the session. Claude's review is not a substitute — you are the final check.
+
+**What to do in Claude Code:**
+Continue the development session.
+
+**Exact prompt to paste:**
+```
+Produce a final review of everything changed in this session.
+
+For each file modified:
+- What changed and why
+- Any hardcoded values that should not be hardcoded
+- Any error cases that are not handled
+- Anything you are uncertain about
+
+Be honest. Flag anything that needs a closer look.
+```
+
+**What answer to expect:**
+A file-by-file review with specific flags. Pay attention to anything Claude marks as uncertain — those are the most likely sources of bugs in testing. Resolve blockers before closing the session.
+
+**What to do next:**
+Read the actual diff yourself, not just Claude's summary. Then go to Step 7.
+
+---
+
+## Step 7 — Write the Testing Handoff
+
+**Goal:**
+Produce a handoff document that makes the testing session fast and systematic.
+
+**What to do in Claude Code:**
+Continue the development session.
+
+**Exact prompt to paste:**
+```
+The implementation is complete. Write a testing handoff.
+
+Include:
+- What was built (2–3 sentences)
+- Files created or modified
+- Happy path: the main flow to verify
+- Edge cases to test
+- Failure cases: invalid input, missing data, error conditions
+- Regression risks: what existing behavior could have been affected
+- Anything flagged as uncertain during implementation
+
+Keep it concise. This goes directly into the test session.
+```
+
+**What answer to expect:**
+A structured handoff document covering all the above points. If regression risks are listed as "none," push back — every change has a blast radius, however small.
+
+**What to do next:**
+Save the testing handoff. Commit all changes with a clear commit message. Open `prompts/testing.md` and paste this handoff into Step 1.
